@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Converter</title></head>
+<body>
+<h3>Icon Converter — Open this file in Chrome and right-click each icon to save as PNG</h3>
+<div style="margin:20px">
+    <p>icon16.png (16x16)</p>
+    <canvas id="c16" width="16" height="16"></canvas>
+    <script>
+      const img16 = new Image();
+      img16.onload = () => {
+        const ctx = document.getElementById('c16').getContext('2d');
+        ctx.drawImage(img16, 0, 0);
+      };
+      img16.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHJ4PSIzIiBmaWxsPSIjMWEyMDJjIi8+CiAgPGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjQiIGZpbGw9IiNlNTNlM2UiLz4KPC9zdmc+';
+    </script>
+  </div>
+<div style="margin:20px">
+    <p>icon48.png (48x48)</p>
+    <canvas id="c48" width="48" height="48"></canvas>
+    <script>
+      const img48 = new Image();
+      img48.onload = () => {
+        const ctx = document.getElementById('c48').getContext('2d');
+        ctx.drawImage(img48, 0, 0);
+      };
+      img48.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij4KICA8cmVjdCB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHJ4PSIxMCIgZmlsbD0iIzFhMjAyYyIvPgogIDxjaXJjbGUgY3g9IjI0IiBjeT0iMjQiIHI9IjEyIiBmaWxsPSIjZTUzZTNlIi8+Cjwvc3ZnPg==';
+    </script>
+  </div>
+<div style="margin:20px">
+    <p>icon128.png (128x128)</p>
+    <canvas id="c128" width="128" height="128"></canvas>
+    <script>
+      const img128 = new Image();
+      img128.onload = () => {
+        const ctx = document.getElementById('c128').getContext('2d');
+        ctx.drawImage(img128, 0, 0);
+      };
+      img128.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+CiAgPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIyNiIgZmlsbD0iIzFhMjAyYyIvPgogIDxjaXJjbGUgY3g9IjY0IiBjeT0iNjQiIHI9IjMxIiBmaWxsPSIjZTUzZTNlIi8+Cjwvc3ZnPg==';
+    </script>
+  </div>
+<script>
+  // Auto-download PNGs
+  window.onload = () => {
+    
+    setTimeout(() => {
+      const canvas = document.getElementById('c16');
+      const link = document.createElement('a');
+      link.download = 'icon16.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }, 160);
+
+    setTimeout(() => {
+      const canvas = document.getElementById('c48');
+      const link = document.createElement('a');
+      link.download = 'icon48.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }, 480);
+
+    setTimeout(() => {
+      const canvas = document.getElementById('c128');
+      const link = document.createElement('a');
+      link.download = 'icon128.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }, 1280);
+  };
+</script>
+</body>
+</html>

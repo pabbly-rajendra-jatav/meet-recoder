@@ -1,0 +1,380 @@
+/* ─── Reset & Base ─────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  color: #1a202c;
+  background: #f7fafc;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* ─── Header ──────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+}
+
+h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #718096;
+  margin-top: 2px;
+}
+
+/* ─── Cards ───────────────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-header h2 {
+  margin-bottom: 0;
+}
+
+/* ─── Form ────────────────────────────────────────────────────── */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 6px;
+}
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2d3748;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.form-group input[type="password"],
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2d3748;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.form-group input[type="password"]:focus,
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.input-with-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-with-link input {
+  flex: 1;
+}
+
+.hint-link {
+  font-size: 12px;
+  color: #4299e1;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.hint-link:hover {
+  text-decoration: underline;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #a0aec0;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ─── Toggle ──────────────────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #cbd5e0;
+  border-radius: 24px;
+  transition: 0.25s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.25s;
+}
+
+.toggle input:checked + .toggle-slider {
+  background: #4299e1;
+}
+
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: #4299e1;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #3182ce;
+}
+
+.btn-secondary {
+  background: #edf2f7;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.btn-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.save-status {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #38a169;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.save-status.visible {
+  opacity: 1;
+}
+
+/* ─── History List ────────────────────────────────────────────── */
+.history-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  text-align: center;
+  color: #a0aec0;
+  padding: 24px 0;
+  font-size: 13px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item-info {
+  flex: 1;
+}
+
+.history-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+  word-break: break-all;
+}
+
+.history-item-meta {
+  font-size: 11px;
+  color: #a0aec0;
+  margin-top: 3px;
+}
+
+.history-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Icon buttons for download/delete */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.15s;
+}
+
+.btn-icon:hover {
+  background: #f7fafc;
+}
+
+.btn-download:hover {
+  color: #2b6cb0;
+  border-color: #bee3f8;
+  background: #ebf8ff;
+}
+
+.btn-delete:hover {
+  color: #c53030;
+  border-color: #fed7d7;
+  background: #fff5f5;
+}
+
+.expired-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #fefcbf;
+  color: #975a16;
+}
+
+.quality-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #ebf8ff;
+  color: #2b6cb0;
+  text-transform: uppercase;
+}
+
+.transcript-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f0fff4;
+  color: #276749;
+}

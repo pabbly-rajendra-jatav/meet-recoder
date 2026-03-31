@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Meet Recorder — Settings</title>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <img src="icons/icon48.png" alt="Logo" class="logo" />
+      <div>
+        <h1>Google Meet Recorder</h1>
+        <p class="subtitle">Extension Settings</p>
+      </div>
+    </header>
+
+    <!-- Settings Form -->
+    <div class="card">
+      <h2>Recording Preferences</h2>
+
+      <div class="form-group">
+        <label for="default-quality">Default Recording Quality</label>
+        <select id="default-quality">
+          <option value="low">Low (Audio only, ~30 MB/hr)</option>
+          <option value="medium">Medium (480p)</option>
+          <option value="high">High (720p)</option>
+          <option value="ultra">Ultra (1080p)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-row">
+          <div>
+            <label for="auto-consent">Auto-Consent Notification</label>
+            <p class="hint">Automatically post a message in Google Meet chat when recording starts.</p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="auto-consent" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" id="consent-message-group">
+        <label for="consent-message">Notification Message</label>
+        <textarea id="consent-message" rows="2" placeholder="Recording started..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-row">
+          <div>
+            <label for="auto-start">Auto-Start Recording</label>
+            <p class="hint">Begin recording automatically when you open a Google Meet link.</p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="auto-start" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <button id="save-btn" class="btn btn-primary">Save Settings</button>
+      <span id="save-status" class="save-status"></span>
+    </div>
+
+    <!-- Transcription Settings -->
+    <div class="card">
+      <h2>AI Transcription</h2>
+
+      <div class="form-group">
+        <div class="toggle-row">
+          <div>
+            <label for="auto-transcribe">Auto-Transcribe Recordings</label>
+            <p class="hint">Automatically transcribe recordings using OpenAI Whisper. Supports Hindi, English & mixed language.</p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="auto-transcribe" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" id="groq-key-group">
+        <label for="groq-api-key">OpenAI API Key</label>
+        <div class="input-with-link">
+          <input type="password" id="groq-api-key" placeholder="sk-..." autocomplete="off" />
+          <a href="https://platform.openai.com/api-keys" target="_blank" class="hint-link">Get API key</a>
+        </div>
+        <p class="hint">Your OpenAI API key. Stored locally and never shared.</p>
+      </div>
+
+      <div class="btn-row">
+        <button id="save-transcription-btn" class="btn btn-primary">Save Transcription Settings</button>
+        <button id="test-api-btn" class="btn btn-secondary">Test API Key</button>
+        <span id="save-transcription-status" class="save-status"></span>
+      </div>
+    </div>
+
+    <!-- Recording History -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Recording History</h2>
+        <button id="clear-history-btn" class="btn btn-sm btn-secondary">Clear All</button>
+      </div>
+
+      <div id="history-list" class="history-list">
+        <p class="empty-state">No recordings yet.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
