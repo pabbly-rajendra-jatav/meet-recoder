@@ -307,6 +307,54 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   return new Blob([arrayBuffer], { type: 'audio/wav' });
 }
 
+// ─── Mic Permission ─────────────────────────────────────────────
+const micPermissionBtn = document.getElementById('mic-permission-btn') as HTMLButtonElement;
+const micStatusEl = document.getElementById('mic-status') as HTMLParagraphElement;
+
+async function checkMicPermission(): Promise<void> {
+  try {
+    const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+    if (result.state === 'granted') {
+      micStatusEl.textContent = 'Microphone allowed ✓';
+      micStatusEl.style.color = '#38a169';
+      micPermissionBtn.textContent = 'Allowed ✓';
+      micPermissionBtn.disabled = true;
+      await chrome.storage.local.set({ micPermissionGranted: true });
+    } else if (result.state === 'denied') {
+      micStatusEl.textContent = 'Microphone blocked. Go to chrome://settings/content/microphone to allow.';
+      micStatusEl.style.color = '#e53e3e';
+      micPermissionBtn.textContent = 'Blocked';
+      micPermissionBtn.disabled = true;
+    } else {
+      micStatusEl.textContent = 'Microphone permission needed for recording your voice.';
+      micPermissionBtn.textContent = 'Allow Mic';
+      micPermissionBtn.disabled = false;
+    }
+  } catch {
+    micStatusEl.textContent = 'Click "Allow Mic" to enable microphone for recordings.';
+    micPermissionBtn.disabled = false;
+  }
+}
+
+micPermissionBtn.addEventListener('click', async () => {
+  micPermissionBtn.disabled = true;
+  micPermissionBtn.textContent = 'Requesting...';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((t) => t.stop());
+    micStatusEl.textContent = 'Microphone allowed ✓';
+    micStatusEl.style.color = '#38a169';
+    micPermissionBtn.textContent = 'Allowed ✓';
+    micPermissionBtn.disabled = true;
+    await chrome.storage.local.set({ micPermissionGranted: true });
+  } catch {
+    micStatusEl.textContent = 'Permission denied. Try again or check browser settings.';
+    micStatusEl.style.color = '#e53e3e';
+    micPermissionBtn.textContent = 'Try Again';
+    micPermissionBtn.disabled = false;
+  }
+});
+
 // ─── Event Listeners ─────────────────────────────────────────────
 saveBtn.addEventListener('click', saveSettings);
 clearHistoryBtn.addEventListener('click', clearHistory);
@@ -318,3 +366,4 @@ testApiBtn.addEventListener('click', testApiKey);
 // ─── Initialize ──────────────────────────────────────────────────
 loadSettings();
 loadHistory();
+checkMicPermission();
