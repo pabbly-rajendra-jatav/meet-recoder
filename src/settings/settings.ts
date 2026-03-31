@@ -4,9 +4,6 @@ import { getRecording, deleteRecording, clearAllRecordings, getAllRecordingIds }
 
 // ─── DOM Elements ────────────────────────────────────────────────
 const defaultQualitySelect = document.getElementById('default-quality') as HTMLSelectElement;
-const autoConsentCheckbox = document.getElementById('auto-consent') as HTMLInputElement;
-const consentMessageTextarea = document.getElementById('consent-message') as HTMLTextAreaElement;
-const consentMessageGroup = document.getElementById('consent-message-group') as HTMLDivElement;
 const autoStartCheckbox = document.getElementById('auto-start') as HTMLInputElement;
 const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
 const saveStatus = document.getElementById('save-status') as HTMLSpanElement;
@@ -25,13 +22,10 @@ async function loadSettings(): Promise<void> {
   const settings: ExtensionSettings = stored.settings || DEFAULT_SETTINGS;
 
   defaultQualitySelect.value = settings.defaultQuality;
-  autoConsentCheckbox.checked = settings.autoConsent;
-  consentMessageTextarea.value = settings.consentMessage;
   autoStartCheckbox.checked = settings.autoStart;
   autoTranscribeCheckbox.checked = settings.autoTranscribe;
   groqApiKeyInput.value = settings.groqApiKey;
 
-  updateConsentMessageVisibility();
   updateGroqKeyVisibility();
 }
 
@@ -43,9 +37,7 @@ async function saveSettings(): Promise<void> {
   const settings: ExtensionSettings = {
     ...existing,
     defaultQuality: defaultQualitySelect.value as any,
-    autoConsent: autoConsentCheckbox.checked,
     autoStart: autoStartCheckbox.checked,
-    consentMessage: consentMessageTextarea.value || DEFAULT_SETTINGS.consentMessage,
   };
 
   await chrome.storage.local.set({ settings });
@@ -76,11 +68,6 @@ async function saveTranscriptionSettings(): Promise<void> {
   saveTranscriptionStatus.textContent = 'Saved!';
   saveTranscriptionStatus.classList.add('visible');
   setTimeout(() => saveTranscriptionStatus.classList.remove('visible'), 2000);
-}
-
-// ─── Toggle consent message visibility ───────────────────────────
-function updateConsentMessageVisibility(): void {
-  consentMessageGroup.style.display = autoConsentCheckbox.checked ? 'block' : 'none';
 }
 
 // ─── Toggle Groq API key visibility ─────────────────────────────
@@ -358,7 +345,6 @@ micPermissionBtn.addEventListener('click', async () => {
 // ─── Event Listeners ─────────────────────────────────────────────
 saveBtn.addEventListener('click', saveSettings);
 clearHistoryBtn.addEventListener('click', clearHistory);
-autoConsentCheckbox.addEventListener('change', updateConsentMessageVisibility);
 saveTranscriptionBtn.addEventListener('click', saveTranscriptionSettings);
 autoTranscribeCheckbox.addEventListener('change', updateGroqKeyVisibility);
 testApiBtn.addEventListener('click', testApiKey);

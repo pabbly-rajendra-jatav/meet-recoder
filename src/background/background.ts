@@ -277,8 +277,9 @@ async function autoTranscribe(recordingId: string, filename: string): Promise<vo
       }
     }
 
+    // Also transcribe mic separately if main transcript missed user's voice
     let micTranscript = '';
-    if (!mainTranscript && micAudioBase64) {
+    if (micAudioBase64) {
       try {
         const binaryStr = atob(micAudioBase64);
         const bytes = new Uint8Array(binaryStr.length);
@@ -291,7 +292,13 @@ async function autoTranscribe(recordingId: string, filename: string): Promise<vo
 
     micAudioBase64 = null;
 
-    const finalTranscript = mainTranscript || micTranscript;
+    // Combine transcripts
+    let finalTranscript = '';
+    if (mainTranscript && micTranscript) {
+      finalTranscript = '═══ Meeting Recording ═══\n' + mainTranscript + '\n\n═══ Your Voice (Mic) ═══\n' + micTranscript;
+    } else {
+      finalTranscript = mainTranscript || micTranscript;
+    }
     if (!finalTranscript) return;
 
     const b64 = btoa(unescape(encodeURIComponent(finalTranscript)));

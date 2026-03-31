@@ -286,32 +286,39 @@ async function finishRecording(): Promise<void> {
     await saveRecording(recordingId, blob, filename);
   } catch { /* ignore */ }
 
-  // Send mic audio for transcription
+  // Send mic audio for transcription (wait for it to complete)
   if (micChunks.length > 0) {
     const micBlob = new Blob(micChunks, { type: 'audio/webm' });
     micChunks = [];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      chrome.runtime.sendMessage({
-        type: 'MIC_AUDIO_DATA',
-        payload: { data: base64, size: micBlob.size },
-      });
-    };
-    reader.readAsDataURL(micBlob);
+    await new Promise<void>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        chrome.runtime.sendMessage({
+          type: 'MIC_AUDIO_DATA',
+          payload: { data: base64, size: micBlob.size },
+        });
+        resolve();
+      };
+      reader.onerror = () => resolve();
+      reader.readAsDataURL(micBlob);
+    });
   }
 
-  // Notify background
+  // Notify background (after mic data is sent)
   chrome.runtime.sendMessage({
     type: 'RECORDING_STOPPED',
-    payload: { fileSize, filename, meetingId: meetId, recordingId },
+    payload: { fileSize, filename, meetingId: meetId, recordingId, micCaptured: !!micStream },
   });
 
   cleanup();
-  statusEl.textContent = 'Done! Closing...';
+  statusEl.textContent = 'Transcribing...';
 
-  // Close this window after a short delay
-  setTimeout(() => window.close(), 2000);
+  // Keep window open longer for transcription to start
+  setTimeout(() => {
+    statusEl.textContent = 'Done!';
+    setTimeout(() => window.close(), 1000);
+  }, 5000);
 }
 
 // ─── Cleanup ─────────────────────────────────────────────────────
