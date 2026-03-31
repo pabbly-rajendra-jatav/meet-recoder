@@ -13,6 +13,7 @@ import { transcribeRecording, formatTranscript } from '../utils/transcribe';
 let isRecording = false;
 let recordingTabId: number | null = null;
 let recorderTabId: number | null = null;
+let recorderWindowId: number | null = null;
 let recordingStartTime = 0;
 let currentFileSize = 0;
 let currentQuality: RecordingQuality = 'medium';
@@ -30,6 +31,7 @@ function resetState(): void {
   isRecording = false;
   recordingTabId = null;
   recorderTabId = null;
+  recorderWindowId = null;
   recordingStartTime = 0;
   currentFileSize = 0;
   useRecorderTab = false;
@@ -117,17 +119,23 @@ async function startViaOffscreen(meetTabId: number, quality: RecordingQuality, m
 async function startViaRecorderTab(meetTabId: number, quality: RecordingQuality, meetingId: string): Promise<void> {
   useRecorderTab = true;
 
-  // Open recorder tab
-  const recTab = await chrome.tabs.create({
+  // Open recorder in separate minimized window
+  const win = await chrome.windows.create({
     url: 'recorder.html',
-    active: true, // Focus so mic permission dialog shows
+    type: 'popup',
+    width: 400,
+    height: 200,
+    top: 0,
+    left: 0,
+    focused: true, // Must be focused initially for getUserMedia
   });
 
-  if (!recTab.id) throw new Error('Failed to create recorder tab');
-  recorderTabId = recTab.id;
+  if (!win.id || !win.tabs?.[0]?.id) throw new Error('Failed to create recorder window');
+  recorderTabId = win.tabs[0].id;
+  recorderWindowId = win.id;
 
   // Wait for page to load
-  await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+  await new Promise<void>((resolve) => setTimeout(resolve, 1500));
 
   // Get stream ID
   const streamId = await new Promise<string>((resolve, reject) => {
@@ -140,16 +148,23 @@ async function startViaRecorderTab(meetTabId: number, quality: RecordingQuality,
     );
   });
 
-  // Send start command to recorder tab
+  // Send start command to recorder
   const response = await chrome.tabs.sendMessage(recorderTabId, {
     type: 'START_RECORDING',
     payload: { quality, tabId: meetTabId, streamId, meetingId, includeMic: true },
   });
 
   if (response?.error) {
-    chrome.tabs.remove(recorderTabId).catch(() => {});
+    chrome.windows.remove(win.id).catch(() => {});
     throw new Error(response.error);
   }
+
+  // Minimize recorder window and focus back to Meet
+  try {
+    await chrome.windows.update(win.id, { state: 'minimized' });
+    const meetTab = await chrome.tabs.get(meetTabId);
+    if (meetTab.windowId) await chrome.windows.update(meetTab.windowId, { focused: true });
+  } catch { /* ignore */ }
 
   isRecording = true;
   recordingTabId = meetTabId;
