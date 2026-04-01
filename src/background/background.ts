@@ -314,7 +314,7 @@ async function autoTranscribe(recordingId: string, filename: string): Promise<vo
     if (record) {
       try {
         console.log('[Meet Recorder] Transcribing recording:', (record.blob.size / 1024 / 1024).toFixed(1), 'MB');
-        const result = await transcribeRecording(record.blob, settings.groqApiKey);
+        const result = await transcribeRecording(record.blob, settings.groqApiKey, settings.transcriptionProvider);
         mainTranscript = formatTranscript(result);
         console.log('[Meet Recorder] Transcript done, language:', result.language);
       } catch (err: any) {
@@ -330,7 +330,7 @@ async function autoTranscribe(recordingId: string, filename: string): Promise<vo
         const bytes = new Uint8Array(binaryStr.length);
         for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
         const micBlob = new Blob([bytes], { type: 'audio/webm' });
-        const micResult = await transcribeRecording(micBlob, settings.groqApiKey);
+        const micResult = await transcribeRecording(micBlob, settings.groqApiKey, settings.transcriptionProvider);
         micTranscript = formatTranscript(micResult);
       } catch { /* ignore */ }
     }

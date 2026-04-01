@@ -105,11 +105,14 @@ export interface CaptionEntry {
 }
 
 // ─── Storage Types ────────────────────────────────────────────────
+export type TranscriptionProvider = 'openai' | 'groq';
+
 export interface ExtensionSettings {
   defaultQuality: RecordingQuality;
   autoConsent: boolean;
   autoStart: boolean;
   consentMessage: string;
+  transcriptionProvider: TranscriptionProvider;
   groqApiKey: string;
   autoTranscribe: boolean;
 }
@@ -131,6 +134,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   autoConsent: false,
   autoStart: false,
   consentMessage: '📹 Recording started by {user name}. This meeting is being recorded.',
+  transcriptionProvider: 'groq',
   groqApiKey: '',
   autoTranscribe: false,
 };

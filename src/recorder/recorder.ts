@@ -56,7 +56,7 @@ micBtn.addEventListener('click', async () => {
   micBtn.textContent = 'Allow Microphone';
 });
 
-function addMicToRecording(): void {
+async function addMicToRecording(): Promise<void> {
   if (!micStream || !tabStream || !mediaRecorder) return;
 
   // Stop current recorder
@@ -68,7 +68,7 @@ function addMicToRecording(): void {
   const tabVideoTracks = tabStream.getVideoTracks();
 
   audioContext = new AudioContext();
-  audioContext.resume();
+  await audioContext.resume();
   const destination = audioContext.createMediaStreamDestination();
 
   if (tabAudioTracks.length > 0) {
@@ -78,9 +78,16 @@ function addMicToRecording(): void {
 
   const micSource = audioContext.createMediaStreamSource(micStream);
   const gain = audioContext.createGain();
-  gain.gain.value = 1.0;
+  gain.gain.value = 1.2;
+  const compressor = audioContext.createDynamicsCompressor();
+  compressor.threshold.value = -30;
+  compressor.knee.value = 20;
+  compressor.ratio.value = 6;
+  compressor.attack.value = 0.003;
+  compressor.release.value = 0.15;
   micSource.connect(gain);
-  gain.connect(destination);
+  gain.connect(compressor);
+  compressor.connect(destination);
 
   const mixedAudio = destination.stream.getAudioTracks();
   const newStream = new MediaStream([...tabVideoTracks, ...mixedAudio]);
@@ -168,9 +175,16 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
 
     const micSource = audioContext.createMediaStreamSource(micStream);
     const gain = audioContext.createGain();
-    gain.gain.value = 1.0;
+    gain.gain.value = 1.2;
+    const compressor = audioContext.createDynamicsCompressor();
+    compressor.threshold.value = -30;
+    compressor.knee.value = 20;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.15;
     micSource.connect(gain);
-    gain.connect(destination);
+    gain.connect(compressor);
+    compressor.connect(destination);
 
     const mixedAudio = destination.stream.getAudioTracks();
 
@@ -180,7 +194,7 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
       finalStream = destination.stream;
     }
 
-    console.log('[Recorder] ✓ Audio mixed: tab + mic');
+    console.log('[Recorder] ✓ Audio mixed: tab + mic (with compressor)');
 
     // Start separate mic recording for transcription
     const micMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')

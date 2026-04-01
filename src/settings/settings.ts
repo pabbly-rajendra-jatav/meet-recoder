@@ -10,8 +10,14 @@ const saveStatus = document.getElementById('save-status') as HTMLSpanElement;
 const historyList = document.getElementById('history-list') as HTMLDivElement;
 const clearHistoryBtn = document.getElementById('clear-history-btn') as HTMLButtonElement;
 const autoTranscribeCheckbox = document.getElementById('auto-transcribe') as HTMLInputElement;
+const providerSelect = document.getElementById('transcription-provider') as HTMLSelectElement;
+const providerGroup = document.getElementById('provider-group') as HTMLDivElement;
+const providerHint = document.getElementById('provider-hint') as HTMLParagraphElement;
 const groqApiKeyInput = document.getElementById('groq-api-key') as HTMLInputElement;
 const groqKeyGroup = document.getElementById('groq-key-group') as HTMLDivElement;
+const apiKeyLabel = document.getElementById('api-key-label') as HTMLLabelElement;
+const apiKeyLink = document.getElementById('api-key-link') as HTMLAnchorElement;
+const apiKeyHint = document.getElementById('api-key-hint') as HTMLParagraphElement;
 const saveTranscriptionBtn = document.getElementById('save-transcription-btn') as HTMLButtonElement;
 const saveTranscriptionStatus = document.getElementById('save-transcription-status') as HTMLSpanElement;
 const testApiBtn = document.getElementById('test-api-btn') as HTMLButtonElement;
@@ -24,9 +30,10 @@ async function loadSettings(): Promise<void> {
   defaultQualitySelect.value = settings.defaultQuality;
   autoStartCheckbox.checked = settings.autoStart;
   autoTranscribeCheckbox.checked = settings.autoTranscribe;
+  providerSelect.value = settings.transcriptionProvider || 'groq';
   groqApiKeyInput.value = settings.groqApiKey;
 
-  updateGroqKeyVisibility();
+  updateTranscriptionVisibility();
 }
 
 // ─── Save Settings ───────────────────────────────────────────────
@@ -55,11 +62,13 @@ async function saveTranscriptionSettings(): Promise<void> {
   const settings: ExtensionSettings = {
     ...existing,
     autoTranscribe: autoTranscribeCheckbox.checked,
+    transcriptionProvider: providerSelect.value as any,
     groqApiKey: groqApiKeyInput.value.trim(),
   };
 
   if (settings.autoTranscribe && !settings.groqApiKey) {
-    alert('Please enter your Groq API key to enable auto-transcription.');
+    const providerName = settings.transcriptionProvider === 'groq' ? 'Groq' : 'OpenAI';
+    alert(`Please enter your ${providerName} API key to enable auto-transcription.`);
     return;
   }
 
@@ -70,9 +79,23 @@ async function saveTranscriptionSettings(): Promise<void> {
   setTimeout(() => saveTranscriptionStatus.classList.remove('visible'), 2000);
 }
 
-// ─── Toggle Groq API key visibility ─────────────────────────────
-function updateGroqKeyVisibility(): void {
-  groqKeyGroup.style.display = autoTranscribeCheckbox.checked ? 'block' : 'none';
+// ─── Toggle transcription fields visibility ─────────────────────
+function updateTranscriptionVisibility(): void {
+  const enabled = autoTranscribeCheckbox.checked;
+  providerGroup.style.display = enabled ? 'block' : 'none';
+  groqKeyGroup.style.display = enabled ? 'block' : 'none';
+
+  const isGroq = providerSelect.value === 'groq';
+  apiKeyLabel.textContent = isGroq ? 'Groq API Key' : 'OpenAI API Key';
+  groqApiKeyInput.placeholder = isGroq ? 'gsk_...' : 'sk-...';
+  apiKeyLink.href = isGroq ? 'https://console.groq.com/keys' : 'https://platform.openai.com/api-keys';
+  apiKeyLink.textContent = 'Get API key';
+  apiKeyHint.textContent = isGroq
+    ? 'Your Groq API key. Free tier available. Stored locally and never shared.'
+    : 'Your OpenAI API key. Paid usage. Stored locally and never shared.';
+  providerHint.textContent = isGroq
+    ? 'Groq offers free Whisper transcription with generous limits.'
+    : 'OpenAI Whisper — reliable and accurate, but paid per minute of audio.';
 }
 
 // ─── Format Helpers ──────────────────────────────────────────────
@@ -213,8 +236,11 @@ async function clearHistory(): Promise<void> {
 // ─── Test API Key ───────────────────────────────────────────────
 async function testApiKey(): Promise<void> {
   const apiKey = groqApiKeyInput.value.trim();
+  const provider = providerSelect.value;
+  const providerName = provider === 'groq' ? 'Groq' : 'OpenAI';
+
   if (!apiKey) {
-    alert('Please enter your Groq API key first.');
+    alert(`Please enter your ${providerName} API key first.`);
     return;
   }
 
@@ -223,7 +249,7 @@ async function testApiKey(): Promise<void> {
 
   try {
     // Send a tiny silent audio to test the API key
-    const ctx = new OfflineAudioContext(1, 16000, 16000); // 1 second of silence
+    const ctx = new OfflineAudioContext(1, 16000, 16000);
     const buffer = ctx.createBuffer(1, 16000, 16000);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
@@ -231,24 +257,27 @@ async function testApiKey(): Promise<void> {
     source.start();
     const rendered = await ctx.startRendering();
 
-    // Encode as WAV
     const wavBlob = audioBufferToWav(rendered);
 
     const formData = new FormData();
     formData.append('file', wavBlob, 'test.wav');
-    formData.append('model', 'whisper-1');
+    formData.append('model', provider === 'groq' ? 'whisper-large-v3' : 'whisper-1');
 
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    const apiUrl = provider === 'groq'
+      ? 'https://api.groq.com/openai/v1/audio/transcriptions'
+      : 'https://api.openai.com/v1/audio/transcriptions';
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}` },
       body: formData,
     });
 
     if (response.ok) {
-      alert('API key is working! Transcription will work after recording.');
+      alert(`${providerName} API key is working! Transcription will work after recording.`);
     } else {
       const err = await response.text();
-      alert(`API key test failed (${response.status}): ${err}`);
+      alert(`${providerName} API key test failed (${response.status}): ${err}`);
     }
   } catch (err: any) {
     alert('Test failed: ' + (err?.message || 'Unknown error'));
@@ -346,7 +375,8 @@ micPermissionBtn.addEventListener('click', async () => {
 saveBtn.addEventListener('click', saveSettings);
 clearHistoryBtn.addEventListener('click', clearHistory);
 saveTranscriptionBtn.addEventListener('click', saveTranscriptionSettings);
-autoTranscribeCheckbox.addEventListener('change', updateGroqKeyVisibility);
+autoTranscribeCheckbox.addEventListener('change', updateTranscriptionVisibility);
+providerSelect.addEventListener('change', updateTranscriptionVisibility);
 testApiBtn.addEventListener('click', testApiKey);
 
 // ─── Initialize ──────────────────────────────────────────────────

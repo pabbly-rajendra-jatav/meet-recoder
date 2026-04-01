@@ -1,9 +1,23 @@
-// ─── OpenAI Whisper Transcription ───────────────────────────────
-// Transcribes audio using OpenAI's Whisper API.
+// ─── Whisper Transcription (OpenAI / Groq) ──────────────────────
+// Transcribes audio using Whisper API via OpenAI or Groq.
 // Supports Hindi, English, Hinglish and auto language detection.
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/audio/transcriptions';
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB OpenAI limit
+import { TranscriptionProvider } from '../types/messages';
+
+const API_URLS: Record<TranscriptionProvider, string> = {
+  openai: 'https://api.openai.com/v1/audio/transcriptions',
+  groq: 'https://api.groq.com/openai/v1/audio/transcriptions',
+};
+
+const MAX_FILE_SIZE: Record<TranscriptionProvider, number> = {
+  openai: 25 * 1024 * 1024, // 25MB
+  groq: 25 * 1024 * 1024,   // 25MB
+};
+
+const MODELS: Record<TranscriptionProvider, string> = {
+  openai: 'whisper-1',
+  groq: 'whisper-large-v3',
+};
 
 export interface TranscriptSegment {
   start: number;
@@ -17,26 +31,26 @@ export interface TranscriptResult {
   language: string;
 }
 
-/** Transcribe a recording blob via OpenAI Whisper */
+/** Transcribe a recording blob via Whisper API (OpenAI or Groq) */
 export async function transcribeRecording(
   blob: Blob,
-  apiKey: string
+  apiKey: string,
+  provider: TranscriptionProvider = 'groq'
 ): Promise<TranscriptResult> {
-  console.log('[Meet Recorder] Blob size:', (blob.size / 1024 / 1024).toFixed(1), 'MB, type:', blob.type);
+  const maxSize = MAX_FILE_SIZE[provider];
+  console.log(`[Meet Recorder] Transcribing via ${provider}, blob size:`, (blob.size / 1024 / 1024).toFixed(1), 'MB');
 
-  if (blob.size > MAX_FILE_SIZE) {
-    throw new Error(`Recording too large (${(blob.size / 1024 / 1024).toFixed(0)} MB). Max 25 MB. Use lower quality for longer recordings.`);
+  if (blob.size > maxSize) {
+    throw new Error(`Recording too large (${(blob.size / 1024 / 1024).toFixed(0)} MB). Max ${(maxSize / 1024 / 1024).toFixed(0)} MB. Use lower quality for longer recordings.`);
   }
 
   const formData = new FormData();
   formData.append('file', blob, 'recording.webm');
-  formData.append('model', 'whisper-1');
+  formData.append('model', MODELS[provider]);
   formData.append('response_format', 'verbose_json');
   formData.append('prompt', 'This audio contains conversation in Hindi, English, and Hinglish (mixed Hindi-English). Transcribe exactly as spoken, keeping Hindi in Devanagari script and English in Latin script.');
 
-  console.log('[Meet Recorder] Sending to OpenAI Whisper API...');
-
-  const response = await fetch(OPENAI_API_URL, {
+  const response = await fetch(API_URLS[provider], {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -46,7 +60,7 @@ export async function transcribeRecording(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
+    throw new Error(`${provider} API error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();

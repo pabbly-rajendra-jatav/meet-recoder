@@ -74,13 +74,22 @@
         </div>
       </div>
 
-      <div class="form-group" id="groq-key-group">
-        <label for="groq-api-key">OpenAI API Key</label>
+      <div class="form-group" id="provider-group" style="display:none;">
+        <label for="transcription-provider">Transcription Provider</label>
+        <select id="transcription-provider">
+          <option value="groq">Groq (Free — whisper-large-v3)</option>
+          <option value="openai">OpenAI (Paid — whisper-1)</option>
+        </select>
+        <p class="hint" id="provider-hint">Groq offers free Whisper transcription with generous limits.</p>
+      </div>
+
+      <div class="form-group" id="groq-key-group" style="display:none;">
+        <label for="groq-api-key" id="api-key-label">Groq API Key</label>
         <div class="input-with-link">
-          <input type="password" id="groq-api-key" placeholder="sk-..." autocomplete="off" />
-          <a href="https://platform.openai.com/api-keys" target="_blank" class="hint-link">Get API key</a>
+          <input type="password" id="groq-api-key" placeholder="gsk_..." autocomplete="off" />
+          <a href="https://console.groq.com/keys" target="_blank" class="hint-link" id="api-key-link">Get API key</a>
         </div>
-        <p class="hint">Your OpenAI API key. Stored locally and never shared.</p>
+        <p class="hint" id="api-key-hint">Your Groq API key. Stored locally and never shared.</p>
       </div>
 
       <div class="btn-row">

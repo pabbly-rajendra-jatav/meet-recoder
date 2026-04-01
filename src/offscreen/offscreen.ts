@@ -124,13 +124,20 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
       tabSource.connect(destination);
     }
 
-    // Mic audio with strong gain boost for clear voice capture
+    // Mic audio with compressor for consistent volume
     const micSource = audioContext.createMediaStreamSource(micStream);
     const gain = audioContext.createGain();
-    gain.gain.value = 1.0;
+    gain.gain.value = 1.2;
+    const compressor = audioContext.createDynamicsCompressor();
+    compressor.threshold.value = -30;
+    compressor.knee.value = 20;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.15;
     micSource.connect(gain);
-    gain.connect(destination);
-    console.log('[Meet Recorder] Mic mixed into recording with 1.2x gain');
+    gain.connect(compressor);
+    compressor.connect(destination);
+    console.log('[Meet Recorder] Mic mixed with compressor + 1.2x gain');
 
     const mixedAudio = destination.stream.getAudioTracks();
 
