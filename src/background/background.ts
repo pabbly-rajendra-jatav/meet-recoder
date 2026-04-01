@@ -20,6 +20,9 @@ let currentQuality: RecordingQuality = 'medium';
 let currentMeetingId = '';
 let micAudioBase64: string | null = null;
 let useRecorderTab = false; // true = recorder tab, false = offscreen
+let isPaused = false;
+let pausedAt = 0;
+let totalPausedDuration = 0;
 
 // ─── Badge ───────────────────────────────────────────────────────
 function updateBadge(recording: boolean): void {
@@ -29,6 +32,9 @@ function updateBadge(recording: boolean): void {
 
 function resetState(): void {
   isRecording = false;
+  isPaused = false;
+  pausedAt = 0;
+  totalPausedDuration = 0;
   recordingTabId = null;
   recorderTabId = null;
   recorderWindowId = null;
@@ -194,6 +200,45 @@ async function sendConsentNotification(meetTabId: number): Promise<void> {
   }
 }
 
+// ─── Pause/Resume Recording ─────────────────────────────────────
+async function pauseRecording(): Promise<void> {
+  if (!isRecording || isPaused) return;
+
+  if (useRecorderTab && recorderTabId) {
+    try { await chrome.tabs.sendMessage(recorderTabId, { type: 'PAUSE_RECORDING' }); } catch { /* ignore */ }
+  } else {
+    try { await chrome.runtime.sendMessage({ type: 'PAUSE_RECORDING' }); } catch { /* ignore */ }
+  }
+
+  isPaused = true;
+  pausedAt = Date.now();
+  chrome.action.setBadgeText({ text: '⏸' });
+  chrome.action.setBadgeBackgroundColor({ color: '#f59e0b' });
+
+  if (recordingTabId) {
+    try { chrome.tabs.sendMessage(recordingTabId, { type: 'PAUSE_RECORDING' }); } catch { /* ignore */ }
+  }
+}
+
+async function resumeRecording(): Promise<void> {
+  if (!isRecording || !isPaused) return;
+
+  if (useRecorderTab && recorderTabId) {
+    try { await chrome.tabs.sendMessage(recorderTabId, { type: 'RESUME_RECORDING' }); } catch { /* ignore */ }
+  } else {
+    try { await chrome.runtime.sendMessage({ type: 'RESUME_RECORDING' }); } catch { /* ignore */ }
+  }
+
+  totalPausedDuration += Date.now() - pausedAt;
+  isPaused = false;
+  pausedAt = 0;
+  updateBadge(true);
+
+  if (recordingTabId) {
+    try { chrome.tabs.sendMessage(recordingTabId, { type: 'RESUME_RECORDING' }); } catch { /* ignore */ }
+  }
+}
+
 // ─── Stop Recording ─────────────────────────────────────────────
 async function stopRecording(): Promise<void> {
   if (!isRecording) return;
@@ -330,9 +375,14 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 
   switch (message.type) {
     case 'GET_STATUS': {
+      const currentPausedDuration = isPaused
+        ? totalPausedDuration + (Date.now() - pausedAt)
+        : totalPausedDuration;
       sendResponse({
         isRecording,
-        duration: isRecording ? Date.now() - recordingStartTime : 0,
+        isPaused,
+        duration: isRecording ? Date.now() - recordingStartTime - currentPausedDuration : 0,
+        pausedDuration: currentPausedDuration,
         fileSize: currentFileSize,
         quality: currentQuality,
         meetingId: currentMeetingId,
@@ -362,6 +412,22 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
     case 'STOP_RECORDING': {
       if (!isFromRecorderOrOffscreen) {
         stopRecording().then(() => sendResponse({ success: true }));
+        return true;
+      }
+      return false;
+    }
+
+    case 'PAUSE_RECORDING': {
+      if (!isFromRecorderOrOffscreen) {
+        pauseRecording().then(() => sendResponse({ success: true }));
+        return true;
+      }
+      return false;
+    }
+
+    case 'RESUME_RECORDING': {
+      if (!isFromRecorderOrOffscreen) {
+        resumeRecording().then(() => sendResponse({ success: true }));
         return true;
       }
       return false;

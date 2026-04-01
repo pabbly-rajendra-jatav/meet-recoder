@@ -14,10 +14,17 @@ const qualitySelect = document.getElementById('quality') as HTMLSelectElement;
 const recordingInfo = document.getElementById('recording-info') as HTMLDivElement;
 const notOnMeet = document.getElementById('not-on-meet') as HTMLDivElement;
 const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
+const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement;
+const pauseBtnText = document.getElementById('pause-btn-text') as HTMLSpanElement;
+const pauseIcon = document.getElementById('pause-icon') as unknown as SVGElement;
+const recordingActions = document.getElementById('recording-actions') as HTMLDivElement;
+const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement;
 
 let isRecording = false;
+let isPaused = false;
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 let recordingStartTime = 0;
+let pausedDuration = 0;
 
 // ─── Formatting Helpers ──────────────────────────────────────────
 function formatDuration(ms: number): string {
@@ -37,25 +44,38 @@ function formatFileSize(bytes: number): string {
 // ─── UI State Management ─────────────────────────────────────────
 function updateUI(status: RecordingStatusPayload): void {
   isRecording = status.isRecording;
+  isPaused = status.isPaused || false;
+  pausedDuration = status.pausedDuration || 0;
 
   if (isRecording) {
     recordingStartTime = Date.now() - status.duration;
 
-    // Show recording state
-    statusBadge.textContent = 'Recording';
-    statusBadge.className = 'badge badge-recording';
-    recordBtnText.textContent = 'Stop Recording';
-    recordBtn.className = 'btn btn-stop';
-    recordIcon.innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
-
     qualitySelector.style.display = 'none';
     recordingInfo.style.display = 'block';
     notOnMeet.style.display = 'none';
+    recordBtn.style.display = 'none';
+    recordingActions.style.display = 'flex';
 
     currentQualityEl.textContent = QUALITY_PRESETS[status.quality].label;
     fileSizeEl.textContent = formatFileSize(status.fileSize);
 
-    startTimer();
+    if (isPaused) {
+      statusBadge.textContent = 'Paused';
+      statusBadge.className = 'badge badge-paused';
+      pauseBtnText.textContent = 'Resume';
+      pauseBtn.className = 'btn btn-resume';
+      pauseIcon.innerHTML = '<polygon points="8,5 19,12 8,19"/>';
+      stopTimer();
+      // Show frozen time
+      timerEl.textContent = formatDuration(status.duration);
+    } else {
+      statusBadge.textContent = 'Recording';
+      statusBadge.className = 'badge badge-recording';
+      pauseBtnText.textContent = 'Pause';
+      pauseBtn.className = 'btn btn-pause';
+      pauseIcon.innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+      startTimer();
+    }
   } else {
     // Show idle state
     statusBadge.textContent = 'Ready';
@@ -63,6 +83,8 @@ function updateUI(status: RecordingStatusPayload): void {
     recordBtnText.textContent = 'Start Recording';
     recordBtn.className = 'btn btn-start';
     recordIcon.innerHTML = '<circle cx="12" cy="12" r="8"/>';
+    recordBtn.style.display = 'flex';
+    recordingActions.style.display = 'none';
 
     qualitySelector.style.display = 'block';
     recordingInfo.style.display = 'none';
@@ -113,49 +135,65 @@ async function getMeetingId(): Promise<string> {
 }
 
 // ─── Record Button Handler ───────────────────────────────────────
+// ─── Start Recording Button ─────────────────────────────────────
 recordBtn.addEventListener('click', async () => {
   recordBtn.disabled = true;
 
   try {
-    if (isRecording) {
-      // Stop recording
-      const response = await chrome.runtime.sendMessage({ type: 'STOP_RECORDING' } as ExtensionMessage);
-      if (response?.error) {
-        console.error('Stop error:', response.error);
-      }
-    } else {
-      // Get mic permission from popup first — this grants permission
-      // to the entire extension origin (including recorder window)
-      recordBtnText.textContent = 'Requesting mic...';
-      try {
-        const tempMic = await navigator.mediaDevices.getUserMedia({ audio: true });
-        tempMic.getTracks().forEach((t) => t.stop());
-      } catch {
-        // Mic denied — recording will only have remote audio
-      }
+    // Get mic permission from popup first
+    recordBtnText.textContent = 'Requesting mic...';
+    try {
+      const tempMic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      tempMic.getTracks().forEach((t) => t.stop());
+    } catch {
+      // Mic denied — recording will only have remote audio
+    }
 
-      recordBtnText.textContent = 'Starting...';
+    recordBtnText.textContent = 'Starting...';
 
-      const quality = qualitySelect.value as RecordingQuality;
-      const meetingId = await getMeetingId();
+    const quality = qualitySelect.value as RecordingQuality;
+    const meetingId = await getMeetingId();
 
-      const response = await chrome.runtime.sendMessage({
-        type: 'START_RECORDING',
-        payload: { quality, meetingId },
-      } as ExtensionMessage);
+    const response = await chrome.runtime.sendMessage({
+      type: 'START_RECORDING',
+      payload: { quality, meetingId },
+    } as ExtensionMessage);
 
-      if (response?.error) {
-        alert(response.error);
-      }
+    if (response?.error) {
+      alert(response.error);
     }
   } catch (err: any) {
     console.error('Action error:', err);
     alert(err.message || 'An error occurred');
   }
 
-  // Refresh status after a brief delay
   setTimeout(refreshStatus, 500);
   recordBtn.disabled = false;
+});
+
+// ─── Pause/Resume Button ────────────────────────────────────────
+pauseBtn.addEventListener('click', async () => {
+  pauseBtn.disabled = true;
+  try {
+    const msgType = isPaused ? 'RESUME_RECORDING' : 'PAUSE_RECORDING';
+    await chrome.runtime.sendMessage({ type: msgType } as ExtensionMessage);
+  } catch (err: any) {
+    console.error('Pause/Resume error:', err);
+  }
+  setTimeout(refreshStatus, 300);
+  pauseBtn.disabled = false;
+});
+
+// ─── Stop Button ────────────────────────────────────────────────
+stopBtn.addEventListener('click', async () => {
+  stopBtn.disabled = true;
+  try {
+    await chrome.runtime.sendMessage({ type: 'STOP_RECORDING' } as ExtensionMessage);
+  } catch (err: any) {
+    console.error('Stop error:', err);
+  }
+  setTimeout(refreshStatus, 500);
+  stopBtn.disabled = false;
 });
 
 // ─── Settings Button ─────────────────────────────────────────────

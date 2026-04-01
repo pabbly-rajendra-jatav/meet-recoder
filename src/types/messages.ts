@@ -49,6 +49,8 @@ export const QUALITY_PRESETS: Record<RecordingQuality, QualityConfig> = {
 export type MessageType =
   | 'START_RECORDING'
   | 'STOP_RECORDING'
+  | 'PAUSE_RECORDING'
+  | 'RESUME_RECORDING'
   | 'RECORDING_STARTED'
   | 'RECORDING_STARTED_FROM_CONTENT'
   | 'RECORDING_STOPPED'
@@ -88,7 +90,9 @@ export interface StartRecordingPayload {
 
 export interface RecordingStatusPayload {
   isRecording: boolean;
+  isPaused: boolean;
   duration: number;
+  pausedDuration: number;
   fileSize: number;
   quality: RecordingQuality;
   meetingId?: string;
@@ -124,7 +128,7 @@ export interface RecordingHistoryEntry {
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   defaultQuality: 'medium',
-  autoConsent: true,
+  autoConsent: false,
   autoStart: false,
   consentMessage: '📹 Recording started by {user name}. This meeting is being recorded.',
   groqApiKey: '',

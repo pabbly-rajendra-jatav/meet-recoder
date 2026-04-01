@@ -285,6 +285,58 @@ h1 {
   transform: translateY(0);
 }
 
+/* ─── Recording Actions (Pause + Stop) ──────────────────────── */
+.recording-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.recording-actions .btn {
+  flex: 1;
+}
+
+.btn-pause {
+  background: #fff;
+  color: #f59e0b;
+  border: 1.5px solid #fde68a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-pause:hover {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-pause:active {
+  transform: translateY(0);
+}
+
+.btn-resume {
+  background: #fff;
+  color: #22c55e;
+  border: 1.5px solid #bbf7d0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-resume:hover {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-resume:active {
+  transform: translateY(0);
+}
+
+.badge-paused {
+  background: #fffbeb;
+  color: #f59e0b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;

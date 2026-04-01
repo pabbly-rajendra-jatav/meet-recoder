@@ -78,7 +78,7 @@ function addMicToRecording(): void {
 
   const micSource = audioContext.createMediaStreamSource(micStream);
   const gain = audioContext.createGain();
-  gain.gain.value = 2.5;
+  gain.gain.value = 1.0;
   micSource.connect(gain);
   gain.connect(destination);
 
@@ -168,7 +168,7 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
 
     const micSource = audioContext.createMediaStreamSource(micStream);
     const gain = audioContext.createGain();
-    gain.gain.value = 2.5;
+    gain.gain.value = 1.0;
     micSource.connect(gain);
     gain.connect(destination);
 
@@ -241,10 +241,28 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
   console.log('[Recorder] Recording started!');
 }
 
+// ─── Pause/Resume Recording ─────────────────────────────────────
+function pauseRecording(): void {
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.pause();
+  if (micRecorder && micRecorder.state === 'recording') micRecorder.pause();
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  statusEl.textContent = 'Paused';
+  statusEl.className = 'status mic-fail';
+  console.log('[Recorder] Recording paused');
+}
+
+function resumeRecording(): void {
+  if (mediaRecorder && mediaRecorder.state === 'paused') mediaRecorder.resume();
+  if (micRecorder && micRecorder.state === 'paused') micRecorder.resume();
+  statusEl.textContent = micStream ? 'Recording (mic ✓)' : 'Recording';
+  statusEl.className = micStream ? 'status mic-ok' : 'status';
+  console.log('[Recorder] Recording resumed');
+}
+
 // ─── Stop Recording ──────────────────────────────────────────────
 function stopRecording(): void {
-  if (micRecorder && micRecorder.state === 'recording') micRecorder.stop();
-  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  if (micRecorder && (micRecorder.state === 'recording' || micRecorder.state === 'paused')) micRecorder.stop();
+  if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) mediaRecorder.stop();
 }
 
 // ─── Finish & Download ───────────────────────────────────────────
@@ -343,6 +361,16 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
 
     case 'STOP_RECORDING':
       stopRecording();
+      sendResponse({ success: true });
+      return false;
+
+    case 'PAUSE_RECORDING':
+      pauseRecording();
+      sendResponse({ success: true });
+      return false;
+
+    case 'RESUME_RECORDING':
+      resumeRecording();
       sendResponse({ success: true });
       return false;
   }

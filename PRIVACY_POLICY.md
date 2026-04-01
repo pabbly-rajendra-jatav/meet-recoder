@@ -1,16 +1,16 @@
-# Privacy Policy — Google Meet Recorder
+# Privacy Policy — Meet Recorder
 
-**Last Updated:** March 30, 2026
+**Last Updated:** April 1, 2026
 
 ## Overview
 
-Google Meet Recorder is a Chrome browser extension that allows users to record Google Meet sessions locally on their device. We are committed to protecting your privacy and being transparent about our data practices.
+Meet Recorder is a Chrome browser extension that allows users to record Google Meet sessions locally on their device, with optional AI-powered transcription. We are committed to protecting your privacy and being transparent about our data practices.
 
 ## Data Collection
 
-**We do NOT collect, store, transmit, or share any personal data.**
+**We do NOT collect, store, or share any personal data on our own servers.**
 
-This extension operates entirely on your local device. No data is sent to any external server, cloud service, or third party.
+This extension operates primarily on your local device. The only exception is the optional transcription feature, which sends audio data to OpenAI's Whisper API if you enable it and provide your own API key (see "Transcription Service" section below).
 
 ## What the Extension Accesses
 
@@ -18,7 +18,7 @@ This extension operates entirely on your local device. No data is sent to any ex
 |---|---|---|
 | Google Meet tab audio/video | To record the meeting | Locally on your device |
 | Microphone audio | To capture your voice in the recording | Locally on your device |
-| Meeting captions (if enabled) | To generate a text transcript | Locally on your device |
+| Microphone audio (for transcription) | To generate a text transcript via OpenAI Whisper API (only if enabled) | Sent to OpenAI, not stored by us |
 | Extension settings | To save your preferences (quality, auto-start, etc.) | Chrome's local storage (on your device) |
 | Recording history | To show past recording metadata | Chrome's local storage (on your device) |
 | Recorded video files | To allow re-download from history | Browser's IndexedDB (on your device, auto-deleted after 7 days) |
@@ -30,9 +30,20 @@ This extension operates entirely on your local device. No data is sent to any ex
 - Video blobs are temporarily stored in the browser's IndexedDB for up to **7 days** to allow re-download, after which they are automatically deleted.
 - No data is uploaded to any server or cloud service.
 
+## Transcription Service (Optional)
+
+If you enable the **Auto Transcribe** feature and provide your own OpenAI API key:
+
+- Your recorded audio is sent to **OpenAI's Whisper API** for speech-to-text transcription.
+- This is the **only** scenario where data leaves your device.
+- The API key is stored locally in Chrome's storage — we never see or store it.
+- The transcribed text is saved locally on your device.
+- OpenAI's data handling is governed by their own [Privacy Policy](https://openai.com/privacy) and [API Data Usage Policy](https://openai.com/policies/api-data-usage-policies).
+- **If you do not enable transcription, no data ever leaves your device.**
+
 ## Data Sharing
 
-**We do NOT share any data with third parties.** Since no data leaves your device, there is nothing to share.
+**We do NOT share any data with third parties.** The only external communication is the optional transcription feature described above, which is initiated by the user and uses the user's own API key.
 
 ## Permissions Used
 
@@ -62,7 +73,7 @@ We may update this Privacy Policy from time to time. Any changes will be reflect
 
 If you have any questions about this Privacy Policy, please contact:
 
-**Email:** [your-email@example.com]
+**Email:** rajendra.jatav@pabbly.com
 
 ---
 

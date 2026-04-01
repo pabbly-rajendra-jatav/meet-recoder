@@ -127,10 +127,10 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
     // Mic audio with strong gain boost for clear voice capture
     const micSource = audioContext.createMediaStreamSource(micStream);
     const gain = audioContext.createGain();
-    gain.gain.value = 3.0; // Strong boost so mic voice is clearly captured
+    gain.gain.value = 1.0;
     micSource.connect(gain);
     gain.connect(destination);
-    console.log('[Meet Recorder] Mic mixed into recording with 3x gain');
+    console.log('[Meet Recorder] Mic mixed into recording with 1.2x gain');
 
     const mixedAudio = destination.stream.getAudioTracks();
 
@@ -184,9 +184,20 @@ async function startRecording(payload: StartRecordingPayload): Promise<void> {
   });
 }
 
+// ─── Pause/Resume Recording ─────────────────────────────────────
+function pauseRecording(): void {
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.pause();
+  console.log('[Meet Recorder] Recording paused');
+}
+
+function resumeRecording(): void {
+  if (mediaRecorder && mediaRecorder.state === 'paused') mediaRecorder.resume();
+  console.log('[Meet Recorder] Recording resumed');
+}
+
 // ─── Stop Recording ──────────────────────────────────────────────
 function stopRecording(): void {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
+  if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
     mediaRecorder.stop();
   }
 }
@@ -311,7 +322,7 @@ async function mergeAudioWithVideo(videoBlob: Blob, micBase64: string, filename:
   if (micStream.getAudioTracks().length > 0) {
     const micSource = ctx.createMediaStreamSource(new MediaStream(micStream.getAudioTracks()));
     const gain = ctx.createGain();
-    gain.gain.value = 2.5;
+    gain.gain.value = 1.0;
     micSource.connect(gain);
     gain.connect(dest);
   }
@@ -394,6 +405,16 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
 
     case 'STOP_RECORDING':
       stopRecording();
+      sendResponse({ success: true });
+      return false;
+
+    case 'PAUSE_RECORDING':
+      pauseRecording();
+      sendResponse({ success: true });
+      return false;
+
+    case 'RESUME_RECORDING':
+      resumeRecording();
       sendResponse({ success: true });
       return false;
 
