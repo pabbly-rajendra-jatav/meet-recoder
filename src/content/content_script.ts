@@ -10,6 +10,7 @@ let recordingStartTime = 0;
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 let autoStartTriggered = false;
 let isIndicatorPaused = false;
+let elapsedAtPause = 0;
 
 // ─── Extract Meeting ID ──────────────────────────────────────────
 function getMeetingId(): string {
@@ -35,7 +36,8 @@ function showRecordingIndicator(): void {
         50% { opacity: 0.4; }
       }
       #meet-rec-stop-pill:hover { background: #dc2626 !important; transform: scale(1.05); }
-      #meet-rec-pause-pill:hover { background: #d97706 !important; transform: scale(1.05); }
+      #meet-rec-pause-pill.is-pause:hover { background: #d97706 !important; transform: scale(1.05); }
+      #meet-rec-pause-pill.is-resume:hover { background: #16a34a !important; transform: scale(1.05); }
     </style>
     <div style="
       position: fixed; top: 20px; right: 20px; z-index: 999999;
@@ -51,7 +53,7 @@ function showRecordingIndicator(): void {
         background: #ef4444; animation: meetRecPulse 1.5s ease-in-out infinite;
       "></div>
       <span id="meet-rec-timer" style="min-width: 58px;">REC 00:00</span>
-      <button id="meet-rec-pause-pill" style="
+      <button id="meet-rec-pause-pill" class="is-pause" style="
         padding: 5px 14px; border: none; border-radius: 8px;
         background: #f59e0b; color: #fff; font-size: 11px; font-weight: 700;
         cursor: pointer; font-family: inherit; letter-spacing: 0.3px;
@@ -247,10 +249,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       const timerEl = document.getElementById('meet-rec-timer');
       const dotEl = document.getElementById('meet-rec-dot');
       const pausePill = document.getElementById('meet-rec-pause-pill');
+      elapsedAtPause = Math.floor((Date.now() - recordingStartTime) / 1000);
       if (timerEl) timerEl.textContent = '⏸ PAUSED';
       if (dotEl) { dotEl.style.background = '#f59e0b'; dotEl.style.animation = 'none'; }
       if (pausePill) {
         pausePill.textContent = 'Resume';
+        pausePill.className = 'is-resume';
         pausePill.style.background = '#22c55e';
         pausePill.style.boxShadow = '0 2px 6px rgba(34,197,94,0.3)';
       }
@@ -267,11 +271,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       if (dotEl) { dotEl.style.background = '#ef4444'; dotEl.style.animation = 'meetRecPulse 1.5s ease-in-out infinite'; }
       if (pausePill) {
         pausePill.textContent = 'Pause';
+        pausePill.className = 'is-pause';
         pausePill.style.background = '#f59e0b';
         pausePill.style.boxShadow = '0 2px 6px rgba(245,158,11,0.3)';
       }
       if (timerEl) {
-        recordingStartTime = Date.now();
+        recordingStartTime = Date.now() - (elapsedAtPause * 1000);
         timerInterval = setInterval(() => {
           if (!isCurrentlyRecording) { if (timerInterval) clearInterval(timerInterval); return; }
           const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
